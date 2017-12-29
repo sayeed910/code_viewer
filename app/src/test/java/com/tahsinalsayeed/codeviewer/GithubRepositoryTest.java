@@ -19,7 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 @RunWith(MockitoJUnitRunner.class)
 public class GithubRepositoryTest {
 
-    private GithubRepository repository;
+    private Repository repository;
     @Mock
     HttpConnection connection;
 
@@ -78,6 +78,13 @@ public class GithubRepositoryTest {
         Mockito.when(connection.getResponse(any(URL.class))).thenReturn(responseToReturn);
         repository.getDirectoryEntry("path/to/direc tory");
     }
+
+    @Test
+    public void content() throws Exception{
+        Repository repo = new GithubRepository("sayeed910", "Java", new HttpConnectionImpl());
+        System.out.println(repo.getFileContent("Bubble Sort.java"));
+    }
+
 
 
 }

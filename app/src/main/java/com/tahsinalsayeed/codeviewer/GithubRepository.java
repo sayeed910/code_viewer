@@ -2,6 +2,9 @@ package com.tahsinalsayeed.codeviewer;
 
 import android.support.annotation.NonNull;
 
+import com.google.common.collect.Maps;
+import com.google.common.io.BaseEncoding;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,32 +15,53 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-import static java.util.Base64.getDecoder;
+//import static java.util.Base64.getDecoder;
 
 
 
-class GithubRepository {
+class GithubRepository implements Repository {
     private final String  REPOSITORY_URL;
     private final String username;
     private final String repositoryName;
     private HttpConnection connection;
+    private HashMap<String, String> cache;
 
     public GithubRepository(String username, String repositoryName, HttpConnection connection) {
         this.username = username;
         this.repositoryName = repositoryName;
         this.connection = connection;
         REPOSITORY_URL = String.format("https://api.github.com/repos/%s/%s/contents/", username, repositoryName);
+        cache = Maps.newHashMap();
     }
 
+    /**
+     *
+     * @return List of the DirectoryEntries at the top level of the repository
+     */
+    @Override
+    public List<DirectoryEntryDto> load(){
+        return getDirectoryEntry("");
+    }
+
+    @Override
     public String getFileContent(String filePath) {
-        String response = connection.getResponse(makeUrl(filePath));
+        String response ="";
+        if (cache.containsKey(filePath))
+            response = cache.get(filePath);
+        else {
+            response = connection.getResponse(makeUrl(filePath));
+            cache.put(filePath, response);
+        }
         Object json = getObjectFromJSONString(response);
         if (json instanceof JSONArray) throw new NotAFile();
         try {
             String fileContent = ((JSONObject)json).getString("content");
-            return new String(getDecoder().decode(fileContent));
+            fileContent = fileContent.replaceAll("\n", "");
+            System.out.println(fileContent);
+            return new String(BaseEncoding.base64().decode(fileContent));
         } catch (JSONException e) {
             throw new RuntimeException("File content could not be found for file " + filePath);
         }
@@ -79,9 +103,16 @@ class GithubRepository {
         return URLEncoder.encode(urlPart, "UTF-8").replaceAll("\\+", "%20");
     }
 
+    @Override
     public List<DirectoryEntryDto> getDirectoryEntry(String directoryPath) {
         List<DirectoryEntryDto> entries = new ArrayList<>(15);
-        String response = connection.getResponse(makeUrl(directoryPath));
+        String response = "";
+        if (cache.containsKey(directoryPath))
+            response = cache.get(directoryPath);
+        else {
+            response = connection.getResponse(makeUrl(directoryPath));
+            cache.put(directoryPath, response);
+        }
         Object json = getObjectFromJSONString(response);
         if (!(json instanceof JSONArray)) throw new NotADirectory(String.format("%s does not point to a directory", directoryPath));
         JSONArray contents = (JSONArray)json;
@@ -109,21 +140,4 @@ class GithubRepository {
         }
     }
 
-    public class NotAFile extends RuntimeException {
-        public NotAFile() {
-        }
-
-        public NotAFile(String message) {
-            super(message);
-        }
-    }
-
-    public class NotADirectory extends RuntimeException {
-        public NotADirectory() {
-        }
-
-        public NotADirectory(String message) {
-            super(message);
-        }
-    }
 }

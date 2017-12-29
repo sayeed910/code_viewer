@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.tahsinalsayeed.codeviewer.RepositoryActivity"
+    android:orientation="vertical">
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Navigation"
+        android:onClick="displayNavigationFragment"
+        android:id="@+id/navigation_button"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/code_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="20sp"
+            android:padding="10dp"
+            android:lineSpacingExtra="15dp"
+            android:fontFamily="@font/monaco"
+            android:freezesText="true"
+            android:textColor="#000"/>
+
+
+    </ScrollView>
+
+
+</LinearLayout>

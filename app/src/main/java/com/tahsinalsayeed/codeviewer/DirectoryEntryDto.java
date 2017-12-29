@@ -1,5 +1,7 @@
 package com.tahsinalsayeed.codeviewer;
 
+import java.io.File;
+
 /**
  * Created by sayeed on 12/24/17.
  */
@@ -14,6 +16,13 @@ class DirectoryEntryDto {
         this.fileName = fileName;
         this.relativePath = relativePath;
         this.isDir = fileType.equalsIgnoreCase("dir");
+    }
+
+    public static DirectoryEntryDto fromFile(File file , String rootDirectoryPath){
+        String fileName = file.getName();
+        //The root directory path does not contain trailing '/'. So, we account for that by adding 1
+        String relativePath = file.getAbsolutePath().substring(rootDirectoryPath.length() + 1);
+        return new DirectoryEntryDto(fileName, relativePath, file.isDirectory() ? "dir": "file");
     }
     public boolean isDir(){
         return isDir;
