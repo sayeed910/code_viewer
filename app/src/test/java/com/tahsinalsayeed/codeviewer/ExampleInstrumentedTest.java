@@ -2,6 +2,7 @@ package com.tahsinalsayeed.codeviewer;
 
 import org.junit.Test;
 
+import java.net.URLEncoder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,5 +39,10 @@ public class ExampleInstrumentedTest {
         assertTrue(matcher.find());
         assertEquals(text.indexOf("//"),matcher.start());
         assertEquals(text.indexOf("\n") + 1,matcher.end());
+    }
+
+    @Test
+    public void encodeUri() throws Exception{
+        assertEquals("%2Fnio", URLEncoder.encode("/nio", "UTF-8"));
     }
 }

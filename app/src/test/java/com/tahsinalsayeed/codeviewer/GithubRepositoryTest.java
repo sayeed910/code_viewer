@@ -1,5 +1,10 @@
 package com.tahsinalsayeed.codeviewer;
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,7 +37,7 @@ public class GithubRepositoryTest {
     public void getFileContentThrowsIfNotIsFile() throws Exception {
         String responseToReturn = "[{\"type\": \"file\"}, {\"type\": \"file\"}, {\"type\": \"file\"}]";
         Mockito.when(connection.getResponse(any(URL.class))).thenReturn(responseToReturn);
-        repository.getFileContent("path/to/file");
+        repository.getCode("path/to/file");
     }
     @Test
     public void getFileContent_ContentOfFile() throws Exception{
@@ -44,7 +49,7 @@ public class GithubRepositoryTest {
         String responseToReturn = String.format("{\"content\" : \"%s\"}", getEncoder().encodeToString(response.getBytes()));
         URL url = new URL("https://api.github.com/repos/user/repo/contents/path/to/fi%20le");
         Mockito.when(connection.getResponse(url)).thenReturn(responseToReturn);
-        assertEquals(response,repository.getFileContent("path/to/fi le"));
+        assertEquals(response,repository.getCode("path/to/fi le"));
     }
 
     @Test
@@ -82,7 +87,17 @@ public class GithubRepositoryTest {
     @Test
     public void content() throws Exception{
         Repository repo = new GithubRepository("sayeed910", "Java", new HttpConnectionImpl());
-        System.out.println(repo.getFileContent("Bubble Sort.java"));
+        System.out.println(repo.getCode("Bubble Sort.java"));
+    }
+
+    @Test
+    public void hash() throws Exception{
+        HashFunction hash = Hashing.murmur3_128();
+        HashFunction hash2 = Hashing.murmur3_32();
+        HashCode code = hash.hashString("https://api.github.com/repos/user/repo/contents/path/to/directory/path/to/file.java", Charsets.UTF_8);
+        HashCode code2 = hash2.hashString("https://api.github.com/repos/user/repo/contents/path/to/directory/path/to/file.java", Charsets.UTF_8);
+        System.out.println(code.toString());
+        System.out.println(code.asInt());
     }
 
 

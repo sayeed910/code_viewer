@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.tahsinalsayeed.codeviewer.RepositoryActivity"
+    tools:context="com.tahsinalsayeed.codeviewer.OfflineRepositoryActivity"
     android:orientation="vertical">
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,13 +18,7 @@
             android:onClick="displayNavigationFragment"
             android:id="@+id/navigation_button"/>
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Save"
-            android:onClick="saveCode"
-            android:id="@+id/save_button"
-            />
+
 
     </LinearLayout>
     <ScrollView
@@ -40,8 +34,7 @@
             android:lineSpacingExtra="15dp"
             android:fontFamily="@font/monaco"
             android:freezesText="true"
-            android:textColor="#000"
-            android:text="Give me code"/>
+            android:textColor="#000"/>
 
 
     </ScrollView>

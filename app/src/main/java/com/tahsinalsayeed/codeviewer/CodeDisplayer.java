@@ -5,5 +5,5 @@ package com.tahsinalsayeed.codeviewer;
  */
 
 interface CodeDisplayer {
-    void displayCode(String code);
+    void displayCode(Code code);
 }

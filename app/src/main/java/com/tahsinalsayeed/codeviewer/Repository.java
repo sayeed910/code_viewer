@@ -9,7 +9,7 @@ import java.util.List;
 interface Repository {
     List<DirectoryEntryDto> load();
 
-    String getFileContent(String filePath);
+    Code getCode(String filePath);
 
     List<DirectoryEntryDto> getDirectoryEntry(String directoryPath);
 

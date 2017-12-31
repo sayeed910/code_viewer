@@ -1,13 +1,15 @@
 package com.tahsinalsayeed.codeviewer;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import android.content.Context;
+import android.net.Uri;
+import android.support.v4.provider.DocumentFile;
+import android.util.Log;
 
-import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * Created by sayeed on 12/28/17.
@@ -17,40 +19,59 @@ class LocalRepository implements Repository {
     /**
      * The absolute path of the project directory without trailing File.separator char
      */
-    private final String rootDirectoryPath;
+    private final String rootDirectoryUri;
+    private Context context;
 
-    public LocalRepository(String rootDir) {
-        this.rootDirectoryPath = CharMatcher.is('/').trimTrailingFrom(rootDir);
+    public LocalRepository(String rootDir, Context applicationContext) {
+        this.rootDirectoryUri = rootDir;
+        context = applicationContext;
     }
 
-    @Override
+
     public List<DirectoryEntryDto> load() {
         return getDirectoryEntry("");
     }
 
-    @Override
-    public String getFileContent(String filePath) {
-        filePath = CharMatcher.is('/').trimFrom(filePath);
-        File file = new File(rootDirectoryPath + File.separator + filePath);
+
+    public Code getCode(String filePath) {
+        DocumentFile file = DocumentFile.fromSingleUri(context, Uri.parse(filePath));
         checkIsValidFile(file);
-        try {
-            return Files.asCharSource(file, Charsets.UTF_8).read();
+        try(Scanner scanner = new Scanner(context.getContentResolver().openInputStream(file.getUri()))) {
+            return new Code(filePath, file.getName(), scanner.useDelimiter("\\A").next());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void checkIsValidFile(File file) {
-        if (!file.isFile()) throw new NotAFile();
+    private void checkIsValidFile(DocumentFile file) {
+
     }
 
-    @Override
+
     public List<DirectoryEntryDto> getDirectoryEntry(String directoryPath) {
-        File dir = new File(rootDirectoryPath + File.separator + CharMatcher.is('/').trimFrom(directoryPath));
-        if (! dir.isDirectory()) throw new NotADirectory();
+        Log.d("LR", directoryPath);
+        DocumentFile dir;
+        if (directoryPath.isEmpty()){
+            dir = DocumentFile.fromTreeUri(context, Uri.parse(rootDirectoryUri));
+        } else {
+            try {
+                Uri uri = Uri.parse(directoryPath);
+                Class<?> c = Class.forName("android.support.v4.provider.TreeDocumentFile");
+                Constructor<?> constructor = c.getDeclaredConstructor(DocumentFile.class, Context.class, Uri.class);
+                constructor.setAccessible(true);
+
+                dir = (DocumentFile) constructor.newInstance(null, context, uri);
+            } catch (Exception e){
+                throw new RuntimeException(e);
+            }
+        }
+
+
+//        if (!dir.isDirectory()) throw new NotADirectory(directoryPath);
         List<DirectoryEntryDto> entries = new ArrayList<>(15);
-        for(File entry : dir.listFiles()){
-            entries.add(DirectoryEntryDto.fromFile(entry, rootDirectoryPath));
+        for(DocumentFile entry : dir.listFiles()){
+            System.out.println(entry.getName());
+            entries.add(DirectoryEntryDto.fromDocumentFile(entry));
         }
         return entries;
     }

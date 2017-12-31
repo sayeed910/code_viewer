@@ -1,6 +1,7 @@
 package com.tahsinalsayeed.codeviewer;
 
-import java.io.File;
+import android.support.v4.provider.DocumentFile;
+import android.util.Log;
 
 /**
  * Created by sayeed on 12/24/17.
@@ -18,11 +19,11 @@ class DirectoryEntryDto {
         this.isDir = fileType.equalsIgnoreCase("dir");
     }
 
-    public static DirectoryEntryDto fromFile(File file , String rootDirectoryPath){
+    public static DirectoryEntryDto fromDocumentFile(DocumentFile file){
         String fileName = file.getName();
-        //The root directory path does not contain trailing '/'. So, we account for that by adding 1
-        String relativePath = file.getAbsolutePath().substring(rootDirectoryPath.length() + 1);
-        return new DirectoryEntryDto(fileName, relativePath, file.isDirectory() ? "dir": "file");
+        String filePath = (file.getUri().toString());
+        Log.d("DIRENT", filePath);
+        return new DirectoryEntryDto(fileName, filePath, file.isDirectory() ? "dir": "file");
     }
     public boolean isDir(){
         return isDir;

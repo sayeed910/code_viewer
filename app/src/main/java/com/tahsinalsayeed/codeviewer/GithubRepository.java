@@ -47,21 +47,24 @@ class GithubRepository implements Repository {
     }
 
     @Override
-    public String getFileContent(String filePath) {
+    public Code getCode(String filePath) {
         String response ="";
-        if (cache.containsKey(filePath))
+        URL url = makeUrl(filePath);
+        if (cache.containsKey(filePath)) {
             response = cache.get(filePath);
+        }
         else {
-            response = connection.getResponse(makeUrl(filePath));
+            response = connection.getResponse(url);
             cache.put(filePath, response);
         }
         Object json = getObjectFromJSONString(response);
         if (json instanceof JSONArray) throw new NotAFile();
         try {
             String fileContent = ((JSONObject)json).getString("content");
+            String filename = ((JSONObject)json).getString("name");
             fileContent = fileContent.replaceAll("\n", "");
-            System.out.println(fileContent);
-            return new String(BaseEncoding.base64().decode(fileContent));
+            String content = new String(BaseEncoding.base64().decode(fileContent));
+            return new Code(url.toString(), filename, content);
         } catch (JSONException e) {
             throw new RuntimeException("File content could not be found for file " + filePath);
         }

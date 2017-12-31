@@ -48,8 +48,16 @@ public class NavigationFragment extends DialogFragment implements AdapterView.On
     static NavigationFragment local(String path){
         NavigationFragment fragment = new NavigationFragment();
         Bundle args = new Bundle(2);
-        args.putString("type", "local");
+        args.putBoolean("local", true);
         args.putString("path", path);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    static NavigationFragment offline(){
+        NavigationFragment fragment = new NavigationFragment();
+        Bundle args = new Bundle(1);
+        args.putBoolean("offline", true);
         fragment.setArguments(args);
         return fragment;
     }
@@ -103,9 +111,13 @@ public class NavigationFragment extends DialogFragment implements AdapterView.On
 
     private void fetchDirectoryEntries() {
         Bundle args = getArguments();
-        if (args.containsKey("type")){
-            repository = Repositories.local(args.getString("path"));
-        } else {
+        if (args.containsKey("local")){
+            repository = Repositories.local(args.getString("path"), getActivity());
+        } else if (args.containsKey("offline")){
+            Log.d("OFFLINE", "found");
+            repository = Repositories.offline(getActivity());
+        }
+        else {
             String username = args.getString("username");
             String repositoryName = args.getString("repositoryName");
             repository = Repositories.github(username, repositoryName);
@@ -119,15 +131,13 @@ public class NavigationFragment extends DialogFragment implements AdapterView.On
         List<String> fileNames = new ArrayList<>(15);
         for (DirectoryEntryDto entry: entries)
             fileNames.add(entry.fileName);
-        Log.e("Context", String.valueOf(context == null));
-        Log.e("Context", String.valueOf(getActivity() == null));
-//        Log.e("Context", String.valueOf( == null));
+
         ArrayAdapter<DirectoryEntryDto> adapter = new DirectoryEntryAdapter(getActivity(), R.layout.navigation_item, entries);
         navigationListView.setAdapter(adapter);
 
     }
 
-    private void displayCode(String code){
+    private void displayCode(Code code){
         ((CodeDisplayer)getActivity()).displayCode(code);
         dismiss();
     }
@@ -143,6 +153,8 @@ public class NavigationFragment extends DialogFragment implements AdapterView.On
         DirectoryEntryDto entry = (DirectoryEntryDto)navigationListView.getItemAtPosition(position);
 
         if (entry.isDir()){
+            navigationListView.setVisibility(View.GONE);
+            progressBar.setVisibility(View.VISIBLE);
             new FetchEntryTask().execute(entry.relativePath);
             currentPath = entry.relativePath;
         } else {
@@ -208,6 +220,7 @@ public class NavigationFragment extends DialogFragment implements AdapterView.On
 
         @Override
         protected List<DirectoryEntryDto> doInBackground(String... strings) {
+            Log.d("OFFLINE", repository.toString());
             return repository.getDirectoryEntry(strings[0]);
         }
 
@@ -215,22 +228,24 @@ public class NavigationFragment extends DialogFragment implements AdapterView.On
         protected void onPostExecute(List<DirectoryEntryDto> directoryEntryDtos) {
             super.onPostExecute(directoryEntryDtos);
             entries = directoryEntryDtos;
+            Log.d("OFFLINE", entries.size() + "");
             progressBar.setVisibility(View.GONE);
+            navigationListView.setVisibility(View.VISIBLE);
             populateListView();
         }
     }
 
-    private class FetchContentTask extends AsyncTask<String, Integer, String>{
+    private class FetchContentTask extends AsyncTask<String, Integer, Code>{
 
         @Override
-        protected String doInBackground(String... strings) {
-            return repository.getFileContent(strings[0]);
+        protected Code doInBackground(String... strings) {
+            return repository.getCode(strings[0]);
         }
 
         @Override
-        protected void onPostExecute(String mContent) {
-            super.onPostExecute(mContent);
-            displayCode(mContent);
+        protected void onPostExecute(Code code) {
+            super.onPostExecute(code);
+            displayCode(code);
         }
     }
 }
